@@ -1,79 +1,114 @@
 # WickContraction
 
-Perform Wick contraction in lattice QCD. Input a correlation function in form of
+Perform Wick contraction in lattice QCD. Input a correlation function in the form of
 interpolating field operators, and the algorithm returns the contraction in form
 of propagators.
 
 ## Interpolating Field Operators
 
+First, we define 5 blocks.
+
 - Quark (column vector)
-  $$Q_{\alpha,a}(x,q,\Gamma)=\delta_{ab}\Gamma_{\alpha\beta}q_{\beta,b}(x)$$
+
+$$Q_{\alpha,a}(x,q,\Gamma)=\delta_{ab}\Gamma_{\alpha\beta}q_{\beta,b}(x)$$
+
 - Anti-quark (row vector)
-  $$\bar{Q}_{\alpha,a}(x,q,\Gamma)=\delta_{ab}\bar{q}_{\beta,b}(x)\Gamma_{\beta\alpha}$$
+
+$$\bar{Q}_{\alpha,a}(x,q,\Gamma)=\delta_{ab}\bar{q}_{\beta,b}(x)\Gamma_{\beta\alpha}$$
+
 - Quark bilinear
-  $$B(x,q,f,\Gamma)=\delta_{ab}\bar{q}_{\alpha,a}(x)\Gamma_{\alpha\beta}f_{\beta,b}(x)$$
+
+$$B(x,q,f,\Gamma)=\delta_{ab}\bar{q}_{\alpha,a}(x)\Gamma_{\alpha\beta}f_{\beta,b}(x)$$
+
 - Diquark (column vector)
-  $$D_{c}(x,q,f,\Gamma)=\epsilon_{abc}q^T_{\alpha,a}(x)(C\Gamma)_{\alpha\beta}f_{\beta,b}$$
+
+$$D_{c}(x,q,f,\Gamma)=\epsilon_{abc}q^T_{\alpha,a}(x)(C\Gamma)_{\alpha\beta}f_{\beta,b}$$
+
 - Anti-diquark (row vector)
-  $$\bar{D}_{c}(x,q,f,\Gamma)=\epsilon_{abc}\bar{q}_{\alpha,a}(x)({\Gamma}C)_{\alpha\beta}\bar{f}^T_{\beta,b}$$
+
+$$\bar{D}_{c}(x,q,f,\Gamma)=\epsilon_{abc}\bar{q}_{\alpha,a}(x)({\Gamma}C)_{\alpha\beta}\bar{f}^T_{\beta,b}$$
+
 Here we have the convention that $q$ and $f$ are quark fields with different
 flavors (we usually use $u,d,s,c,t,b$ as flavors), Latin letters $a,b,c,\dots$
 represents for color indices, Greek letters $\alpha,\beta,\gamma,\dots$
-represents for spin indices. Here the transpose operation $T$ only indicates the
+represents spin indices. Here, the transpose operation $T$ only indicates the
 shape (row or column vector) of the field, and does not change the order of the
 indices.
 
 And we need to define the corresponding Dirac conjugate (adjoint) operation:
+
 - Quark
-  $$Q_{\beta,a}^\dagger(x,q,\Gamma)(\gamma_4)_{\beta\alpha}=\delta_{ab}\bar{q}_{\beta,b}(x)(\gamma_4\Gamma^\dagger\gamma_4)_{\beta\alpha}$$
-  $$Q_{\beta,a}^\dagger(x,q,\Gamma)(\gamma_4)_{\beta\alpha}=\bar{Q}_{\alpha,a}(x,q,\gamma_4\Gamma^\dagger\gamma_4)$$
+
+$$Q_{\beta,a}^\dagger(x,q,\Gamma)(\gamma_4)_{\beta\alpha}=\delta_{ab}\bar{q}_{\beta,b}(x)(\gamma_4\Gamma^\dagger\gamma_4)_{\beta\alpha}$$
+$$Q_{\beta,a}^\dagger(x,q,\Gamma)(\gamma_4)_{\beta\alpha}=\bar{Q}_{\alpha,a}(x,q,\gamma_4\Gamma^\dagger\gamma_4)$$
+
 - Anti-quark
-  $$(\gamma_4)_{\alpha\beta}\bar{Q}_{\beta,a}^\dagger(x,q,\Gamma)=\delta_{ab}(\gamma_4\Gamma^\dagger\gamma_4)_{\alpha\beta}q_{\beta,b}(x)$$
-  $$(\gamma_4)_{\alpha\beta}\bar{Q}_{\beta,a}^\dagger(x,q,\Gamma)=Q_{\alpha,a}(x,q,\gamma_4\Gamma^\dagger\gamma_4)$$
+
+$$(\gamma_4)_{\alpha\beta}\bar{Q}_{\beta,a}^\dagger(x,q,\Gamma)=\delta_{ab}(\gamma_4\Gamma^\dagger\gamma_4)_{\alpha\beta}q_{\beta,b}(x)$$
+$$(\gamma_4)_{\alpha\beta}\bar{Q}_{\beta,a}^\dagger(x,q,\Gamma)=Q_{\alpha,a}(x,q,\gamma_4\Gamma^\dagger\gamma_4)$$
+
 - Quark bilinear
-  $$B^\dagger(x,q,f,\Gamma)=\delta_{ab}\bar{f}_{\alpha,a}(x)(\gamma_4\Gamma^\dagger\gamma_4)_{\alpha\beta}q_{\beta,b}(x)$$
-  $$B^\dagger(x,q,f,\Gamma)=B(x,f,q,\gamma_4\Gamma^\dagger\gamma_4)$$
+
+$$B^\dagger(x,q,f,\Gamma)=\delta_{ab}\bar{f}_{\alpha,a}(x)(\gamma_4\Gamma^\dagger\gamma_4)_{\alpha\beta}q_{\beta,b}(x)$$
+$$B^\dagger(x,q,f,\Gamma)=B(x,f,q,\gamma_4\Gamma^\dagger\gamma_4)$$
+
 - Diquark
-  $$D_{c}^\dagger(x,q,f,\Gamma)=\epsilon_{abc}\bar{f}_{\alpha,a}(x)(\gamma_4\Gamma^\dagger\gamma_4C)_{\alpha\beta}\bar{q}^T_{\beta,b}(x)$$
-  $$D_{c}^\dagger(x,q,f,\Gamma)=\bar{D}_{c}(x,f,q,\gamma_4\Gamma^\dagger\gamma_4)$$
+
+$$D_{c}^\dagger(x,q,f,\Gamma)=\epsilon_{abc}\bar{f}_{\alpha,a}(x)(\gamma_4\Gamma^\dagger\gamma_4C)_{\alpha\beta}\bar{q}^T_{\beta,b}(x)$$
+$$D_{c}^\dagger(x,q,f,\Gamma)=\bar{D}_{c}(x,f,q,\gamma_4\Gamma^\dagger\gamma_4)$$
+
 - Anti-diquark
-  $$\bar{D}_{c}^\dagger(x,q,f,\Gamma)=\epsilon_{abc}f^T_{\alpha,a}(x)(C\gamma_4\Gamma^{\dagger}\gamma_4)_{\alpha\beta}q_{\beta,b}(x)$$
-  $$\bar{D}_{c}^\dagger(x,q,f,\Gamma)=D_{c}(x,f,q,\gamma_4 \Gamma^\dagger\gamma_4)$$
+
+$$\bar{D}_{c}^\dagger(x,q,f,\Gamma)=\epsilon_{abc}f^T_{\alpha,a}(x)(C\gamma_4\Gamma^{\dagger}\gamma_4)_{\alpha\beta}q_{\beta,b}(x)$$
+$$\bar{D}_{c}^\dagger(x,q,f,\Gamma)=D_{c}(x,f,q,\gamma_4 \Gamma^\dagger\gamma_4)$$
+
 Here we used the property $C^\dagger=\gamma_4C\gamma_4$.
 
-Most local lattice QCD interpolating field operators can be constructed by these
+Most local lattice QCD interpolating field operators can be constructed from these
 elementary blocks. For example:
-- A local proton interpolating field operator is
-  $$[\chi_p(x)]_{\gamma} = \epsilon_{abc}u^T_{\alpha,a}(x)C\gamma_5d_{\beta,b}(x)u_{\gamma,c}(x)$$
-  which can be constructed by a diquark and a quark:
-  $$[\chi_p(x)]_{\gamma} = D_c(x,u,d,\gamma_5)Q_{\gamma,c}(x,u,\gamma_0)$$
-- A local $T_{cc}^+$ interpolating field operator with $J^P=1^+$ is
-  $$\chi_{T_{cc}^+}(x) = \epsilon_{abc}\epsilon_{dec}c^T_{\alpha,a}(x)C{\gamma_\mu}c_{\beta,b}(x)\bar{u}_{\gamma,d}(x)(\gamma_5C)_{\gamma\delta}\bar{d}^T_{\delta,e}(x)$$
-  which can be constructed by a diquark and an anti-diquark:
-  $$\chi_{T_{cc}^+}(x) = D_c(x,c,c,\gamma_\mu)\bar{D}_c(x,u,d,\gamma_5)$$
+
+- A local proton interpolating field operator can be constructed by a diquark and a quark:
+
+$$[\chi_p(x)]_{\gamma} = \epsilon_{abc}u^T_{\alpha,a}(x)C\gamma_5d_{\beta,b}(x)u_{\gamma,c}(x)$$
+$$[\chi_p(x)]_{\gamma} = D_c(x,u,d,\gamma_5)Q_{\gamma,c}(x,u,\gamma_0)$$
+
+- A local $T_{cc}^+$ interpolating field operator with $J^P=1^+$ can be constructed by a diquark and an anti-diquark:
+
+$$\chi_{T_{cc}^+}(x) = \epsilon_{abc}\epsilon_{dec}c^T_{\alpha,a}(x)C{\gamma_\mu}c_{\beta,b}(x)\bar{u}_{\gamma,d}(x)(\gamma_5C)_{\gamma\delta}\bar{d}^T_{\delta,e}(x)$$
+$$\chi_{T_{cc}^+}(x) = D_c(x,c,c,\gamma_\mu)\bar{D}_c(x,u,d,\gamma_5)$$
 
 Sometimes, we also need to use non-local interpolating field operators, which
 can be constructed by the above blocks after replacing local quark fields with
 gauge covariant shifted quark fields. For example, the $\mu$ and $-\mu$ shifted
 quark field is defined as
+
 $$q^{\mu}_{\alpha,a}(x)=[U_\mu(x)]_{ab}q_{\alpha,b}(x+\hat{\mu}),\;q^{-\mu}_{\alpha,a}(x)=[U^\dagger_\mu(x-\hat{\mu})]_{ab}q_{\alpha,b}(x-\hat{\mu})$$
+
 where $\hat{\mu}$ is the unit vector in $\mu$ direction. Now a non-local meson
 interpolating field operator can be defined as
+
 $$M^\mu(x,q,f,\Gamma)=\bar{q}_{\alpha,a}(x)\Gamma_{\alpha\beta}f^\mu_{\beta,a}(x)=M(x,q,f^\mu,\Gamma)$$
 
 ## Propagators
 
 A two-point correlation function of pion is
+
 $$M(x,q,f,\gamma_5)M^\dagger(y,q,f,\gamma_5) = \bar{q}_{\alpha,a}(x)(\gamma_5)_{\alpha\beta}f_{\beta,a}(x)\bar{f}_{\alpha',a'}(x)(\gamma_4\gamma_5^\dagger\gamma_4)_{\alpha'\beta'}q_{\beta',a'}(x)$$
+
 Define a propagator as
+
 $$S^{q}_{\alpha\beta,ab}(x,y) = q_{\alpha,a}(x)\bar{q}_{\beta,b}(y)$$
+
 The order of quark and anti-quark field is important. Finally, the two-point
 correlation function can be expressed in terms of propagators as
+
 $$M(x,q,f,\gamma_5)M^\dagger(y,q,f,\gamma_5) = -S^q_{\beta'\alpha,a'a}(y,x)(\gamma_5)_{\alpha\beta}S^f_{\beta\alpha',aa'}(x,y)(\gamma_4\gamma_5^\dagger\gamma_4)_{\alpha'\beta'}$$
+
 The minus sign comes from the anti-commuting nature of the quark fields.
 Finally, we usually simplify this expression by applying $\gamma_5$-Hermiticity
 and degenerating two light-flavor quarks to make the coordinate order consistent
 in all propagators:
+
 $$M(x,q,f,\gamma_5)M^\dagger(y,q,f,\gamma_5) = S^{l*}_{\alpha\beta',aa'}(x,y)(\gamma_0)_{\alpha\beta}S^l_{\beta\alpha',aa'}(x,y)(\gamma_0)_{\alpha'\beta'}$$
 
 ## Python API
