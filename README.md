@@ -1,8 +1,8 @@
 # WickContraction
 
-Perform Wick contraction in lattice QCD. Input a correlation function in the form of
-interpolating field operators, and the algorithm returns the contraction in form
-of propagators.
+Perform Wick contraction in lattice QCD. Input a correlation function in the
+form of interpolating field operators, and the algorithm returns the contraction
+in the form of adjacency matrices.
 
 ## Interpolating Field Operators
 
@@ -64,15 +64,17 @@ $$\bar{D}_{c}^\dagger(x,q,f,\Gamma)=D_{c}(x,f,q,\gamma_4 \Gamma^\dagger\gamma_4)
 
 Here we used the property $C^\dagger=\gamma_4C\gamma_4$.
 
-Most local lattice QCD interpolating field operators can be constructed from these
-elementary blocks. For example:
+Most local lattice QCD interpolating field operators can be constructed from
+these elementary blocks. For example:
 
-- A local proton interpolating field operator can be constructed by a diquark and a quark:
+- A local proton interpolating field operator can be constructed by a diquark
+  and a quark:
 
 $$[\chi_p(x)]_{\gamma} = \epsilon_{abc}u^T_{\alpha,a}(x)C\gamma_5d_{\beta,b}(x)u_{\gamma,c}(x)$$
 $$[\chi_p(x)]_{\gamma} = D_c(x,u,d,\gamma_5)Q_{\gamma,c}(x,u,\gamma_0)$$
 
-- A local $T_{cc}^+$ interpolating field operator with $J^P=1^+$ can be constructed by a diquark and an anti-diquark:
+- A local $T_{cc}^+$ interpolating field operator with $J^P=1^+$ can be
+  constructed by a diquark and an anti-diquark:
 
 $$\chi_{T_{cc}^+}(x) = \epsilon_{abc}\epsilon_{dec}c^T_{\alpha,a}(x)C{\gamma_\mu}c_{\beta,b}(x)\bar{u}_{\gamma,d}(x)(\gamma_5C)_{\gamma\delta}\bar{d}^T_{\delta,e}(x)$$
 $$\chi_{T_{cc}^+}(x) = D_c(x,c,c,\gamma_\mu)\bar{D}_c(x,u,d,\gamma_5)$$
@@ -110,6 +112,16 @@ and degenerating two light-flavor quarks to make the coordinate order consistent
 in all propagators:
 
 $$M(x,q,f,\gamma_5)M^\dagger(y,q,f,\gamma_5) = S^{l*}_{\alpha\beta',aa'}(x,y)(\gamma_0)_{\alpha\beta}S^l_{\beta\alpha',aa'}(x,y)(\gamma_0)_{\alpha'\beta'}$$
+
+## Adjacency Matrices
+
+Every term in the final contraction can be represented by an adjacency matrix.
+Each row of the matrix corresponds to a quark field, and each column corresponds
+to an anti-quark field in the original correlation function. Thus, an edge at
+position $(i,j)$ in the adjacency matrix represents a propagator connecting the
+sink quark field $i$ and the source anti-quark field $\bar{j}$. The propagator
+has the spin and color indices $S_{\alpha_i\beta_j, a_i b_j}$. The residual
+spin/color tensors are stored separately from the adjacency matrix.
 
 ## Python API
 
