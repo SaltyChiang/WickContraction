@@ -30,6 +30,10 @@ def show_simplified(name, correlator, order=None, degenerate=False):
     correlator.simplify(degenerate=degenerate, order=order)
     print("  After:")
     print("   ", correlator)
+    print("  Einsum:")
+    for term in correlator.terms:
+        factor, einsum, operands = term.to_einsum()
+        print(f"    {factor} {einsum}  |  {', '.join(operands)}")
     print()
 
 
@@ -63,7 +67,7 @@ if __name__ == "__main__":
     proton_snk = u_gamma5_d.at("x", c_snk) * u_gamma0.at("x", s_snk, c_snk)
     proton_src = (u_gamma5_d.at("y", c_src) * u_gamma0.at("y", s_src, c_src)).adjoint()
     p_plus = SpinProjector.P_plus(s_src, s_snk)
-    proton = Correlator(proton_snk * proton_src * p_plus)
+    proton = Correlator(p_plus * proton_snk * proton_src)
     show_simplified("Projected proton two-point function", proton, order=["x", "y"])
 
     # Flavor-singlet pseudoscalar η: (ūu + d̄d) / √2 at both ends.

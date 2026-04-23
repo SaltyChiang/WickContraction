@@ -26,7 +26,7 @@ $$D_{c}(x,q,f,\Gamma)=\epsilon_{abc}q^T_{\alpha,a}(x)(C\Gamma)_{\alpha\beta}f_{\
 
 - Anti-diquark (row vector)
 
-$$\bar{D}_{c}(x,q,f,\Gamma)=\epsilon_{abc}\bar{q}_{\alpha,a}(x)({\Gamma}C)_{\alpha\beta}\bar{f}^T_{\beta,b}$$
+$$\bar{D}_{c}(x,q,f,\Gamma)=-\epsilon_{abc}\bar{q}_{\alpha,a}(x)({\Gamma}C)_{\alpha\beta}\bar{f}^T_{\beta,b}$$
 
 Here we have the convention that $q$ and $f$ are quark fields with different
 flavors (we usually use $u,d,s,c,t,b$ as flavors), Latin letters $a,b,c,\dots$
@@ -54,7 +54,7 @@ $$B^\dagger(x,q,f,\Gamma)=B(x,f,q,\gamma_4\Gamma^\dagger\gamma_4)$$
 
 - Diquark
 
-$$D_{c}^\dagger(x,q,f,\Gamma)=\epsilon_{abc}\bar{f}_{\alpha,a}(x)(\gamma_4\Gamma^\dagger\gamma_4C)_{\alpha\beta}\bar{q}^T_{\beta,b}(x)$$
+$$D_{c}^\dagger(x,q,f,\Gamma)=-\epsilon_{abc}\bar{f}_{\alpha,a}(x)(\gamma_4\Gamma^\dagger\gamma_4C)_{\alpha\beta}\bar{q}^T_{\beta,b}(x)$$
 $$D_{c}^\dagger(x,q,f,\Gamma)=\bar{D}_{c}(x,f,q,\gamma_4\Gamma^\dagger\gamma_4)$$
 
 - Anti-diquark

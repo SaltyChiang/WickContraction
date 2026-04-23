@@ -276,7 +276,7 @@ class AntiDiquarkBlock(Block):
         alpha, beta = SpinIndex.new(), SpinIndex.new()
         a, b, c = ColorIndex.new(), ColorIndex.new(), self.color
         gamma_c = self.gamma @ C
-        return gamma_c.factor, [
+        return -gamma_c.factor, [
             ColorEpsilonTensor(a.name, b.name, c.name),
             self.q.to_tensor(self.x, True, False, alpha, a),
             SpinGammaTensor(Gamma(gamma_c.index), alpha.name, beta.name),

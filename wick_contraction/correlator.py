@@ -10,6 +10,7 @@ from .tensor import (
     ColorEpsilonTensor,
 )
 from .adjacency import AdjacencyTerm
+from .index import IndexMap
 
 
 class WickTerm:
@@ -21,30 +22,27 @@ class WickTerm:
         self.factor = factor
         self.tensors: List[SpinColorTensorType] = []
         self.quark_fields: List[QuarkFieldTensor] = []
-        self.map_quark: Dict[int, int] = {}
-        self.map_antiquark: Dict[int, int] = {}
-        self.map_spin: Dict[str, str] = {}
-        self.map_color: Dict[str, str] = {}
+        quark_map: Dict[int, int] = {}
+        antiquark_map: Dict[int, int] = {}
+        self.index_map = IndexMap()
         self.num_quark = 0
         self.num_antiquark = 0
         for tensor in reversed(tensors):
             if isinstance(tensor, QuarkFieldTensor):
                 self.quark_fields.append(tensor)
-                if self.map_spin.get(tensor.spin) is not None or self.map_color.get(tensor.color) is not None:
-                    raise ValueError("spin and color indices should be unique across all quark fields")
                 if not tensor.antiquark:
-                    if self.map_quark.get(id(tensor)) is not None:
+                    if id(tensor) in quark_map:
                         raise ValueError("quark fields should be unique")
-                    self.map_quark[id(tensor)] = self.num_quark
-                    self.map_spin[tensor.spin] = f"α{self.num_quark}"
-                    self.map_color[tensor.color] = f"a{self.num_quark}"
+                    quark_map[id(tensor)] = self.num_quark
+                    self.index_map.set_spin(tensor.spin, f"α{self.num_quark}")
+                    self.index_map.set_color(tensor.color, f"a{self.num_quark}")
                     self.num_quark += 1
                 else:
-                    if self.map_antiquark.get(id(tensor)) is not None:
+                    if id(tensor) in antiquark_map:
                         raise ValueError("antiquark fields should be unique")
-                    self.map_antiquark[id(tensor)] = self.num_antiquark
-                    self.map_spin[tensor.spin] = f"β{self.num_antiquark}"
-                    self.map_color[tensor.color] = f"b{self.num_antiquark}"
+                    antiquark_map[id(tensor)] = self.num_antiquark
+                    self.index_map.set_spin(tensor.spin, f"β{self.num_antiquark}")
+                    self.index_map.set_color(tensor.color, f"b{self.num_antiquark}")
                     self.num_antiquark += 1
             else:
                 self.tensors.append(tensor)
@@ -57,8 +55,8 @@ class WickTerm:
             adjacency = AdjacencyTerm(self.num_quark, self.factor, self.tensors)
             for sign, quark, antiquark in pairs:
                 adjacency.factor *= sign
-                row = self.map_quark[id(quark)]
-                col = self.map_antiquark[id(antiquark)]
+                row = quark_map[id(quark)]
+                col = antiquark_map[id(antiquark)]
                 adjacency.matrix[row][col].set(quark, antiquark)
             self.adjacency_terms.append(adjacency)
 
@@ -91,25 +89,25 @@ class WickTerm:
         if isinstance(tensor, SpinGammaTensor):
             return SpinGammaTensor(
                 tensor.gamma,
-                self.map_spin.get(tensor.left, tensor.left),
-                self.map_spin.get(tensor.right, tensor.right),
+                self.index_map.getdefault_spin(tensor.left),
+                self.index_map.getdefault_spin(tensor.right),
             )
         if isinstance(tensor, SpinProjectorTensor):
             return SpinProjectorTensor(
                 tensor.factors,
-                self.map_spin.get(tensor.left, tensor.left),
-                self.map_spin.get(tensor.right, tensor.right),
+                self.index_map.getdefault_spin(tensor.left),
+                self.index_map.getdefault_spin(tensor.right),
             )
         if isinstance(tensor, ColorDeltaTensor):
             return ColorDeltaTensor(
-                self.map_color.get(tensor.left, tensor.left),
-                self.map_color.get(tensor.right, tensor.right),
+                self.index_map.getdefault_color(tensor.left),
+                self.index_map.getdefault_color(tensor.right),
             )
         if isinstance(tensor, ColorEpsilonTensor):
             return ColorEpsilonTensor(
-                self.map_color.get(tensor.left, tensor.left),
-                self.map_color.get(tensor.middle, tensor.middle),
-                self.map_color.get(tensor.right, tensor.right),
+                self.index_map.getdefault_color(tensor.left),
+                self.index_map.getdefault_color(tensor.middle),
+                self.index_map.getdefault_color(tensor.right),
             )
         return tensor
 

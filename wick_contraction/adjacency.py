@@ -5,9 +5,9 @@ try:
 except ImportError:
     sympy = None
 
-from .index import ColorIndex, SpinIndex
+from .index import SpinIndex, ColorIndex, SpinEinsumIndex, ColorEinsumIndex, IndexMap
 from .gamma import Gamma, GAMMA_5
-from .quark import QuarkPrefixType, QuarkLocal
+from .quark import QuarkPrefixType, QuarkLocal, QuarkLink, QuarkSmearing, QuarkDerivative
 from .tensor import (
     SpinColorTensorType,
     QuarkFieldTensor,
@@ -153,6 +153,65 @@ class AdjacencyTerm:
                     self.color_swap(row, col)
                 if degenerate:
                     edge.degenerate()
+
+    def to_einsum(self) -> Tuple[Union[int, float, complex], str, List[str]]:
+        index_map = IndexMap()
+        subscripts: List[str] = []
+        operands: List[str] = []
+
+        SpinEinsumIndex.reset()
+        ColorEinsumIndex.reset()
+        for tensor in self.tensors:
+            if isinstance(tensor, SpinGammaTensor) and tensor.gamma.index == 0:
+                index_map.delta_spin(tensor.left, tensor.right, SpinEinsumIndex)
+            elif isinstance(tensor, SpinGammaTensor):
+                A = index_map.setdefault_spin(tensor.left, SpinEinsumIndex)
+                B = index_map.setdefault_spin(tensor.right, SpinEinsumIndex)
+                subscripts.append(A + B)
+                operands.append(f"gamma({tensor.gamma.index})")
+            elif isinstance(tensor, SpinProjectorTensor):
+                A = index_map.setdefault_spin(tensor.left, SpinEinsumIndex)
+                B = index_map.setdefault_spin(tensor.right, SpinEinsumIndex)
+                subscripts.append(A + B)
+                operands.append("projector")
+            elif isinstance(tensor, ColorDeltaTensor):
+                index_map.delta_color(tensor.left, tensor.right, ColorEinsumIndex)
+            elif isinstance(tensor, ColorEpsilonTensor):
+                a = index_map.setdefault_color(tensor.left, ColorEinsumIndex)
+                b = index_map.setdefault_color(tensor.middle, ColorEinsumIndex)
+                c = index_map.setdefault_color(tensor.right, ColorEinsumIndex)
+                subscripts.append(a + b + c)
+                operands.append("epsilon")
+
+        for row, row_vec in enumerate(self.matrix):
+            for col, edge in enumerate(row_vec):
+                if edge.flavor is not None:
+                    subscripts.append(
+                        "..."
+                        + index_map.get_spin(f"α{row}")
+                        + index_map.get_spin(f"β{col}")
+                        + index_map.get_color(f"a{row}")
+                        + index_map.get_color(f"b{col}")
+                    )
+                    link_prefix = (
+                        f"W_{edge.prefix.origin}_{edge.prefix.location}_" if isinstance(edge.prefix, QuarkLink) else ""
+                    )
+                    link_suffix = (
+                        f"_W_{edge.suffix.location}_{edge.suffix.origin}" if isinstance(edge.suffix, QuarkLink) else ""
+                    )
+                    nabla_prefix = f"D_{edge.prefix.direction}_" if isinstance(edge.prefix, QuarkDerivative) else ""
+                    nabla_suffix = f"_D_{edge.suffix.direction}" if isinstance(edge.suffix, QuarkDerivative) else ""
+                    smearing_prefix = "S_" if isinstance(edge.prefix, QuarkSmearing) else ""
+                    smearing_suffix = "_S" if isinstance(edge.suffix, QuarkSmearing) else ""
+                    conj = ".conj()" if edge.conjugate else ""
+                    operands.append(
+                        f"{link_prefix}{nabla_prefix}{smearing_prefix}"
+                        f"propag_{edge.flavor}_{edge.sink}_{edge.source}"
+                        f"{smearing_suffix}{nabla_suffix}{link_suffix}"
+                        f"{conj}"
+                    )
+
+        return self.factor, ",".join(subscripts) + "->...", operands
 
     def signature(self) -> str:
         matrix_str = "[" + ", ".join(["[" + ", ".join(str(edge) for edge in row) + "]" for row in self.matrix]) + "]"
